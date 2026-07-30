@@ -1,0 +1,4 @@
+import { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { mockApi } from '../../mockData'
+export default function MerchantDetails() { const { id } = useParams(); const [merchant, setMerchant] = useState(); useEffect(() => { mockApi.getVendor(id).then(setMerchant) }, [id]); if (!merchant) return <p>Loading merchant...</p>; return <section className="glass-card content-card"><p className="eyebrow">Read-only merchant profile</p><h2 className="card-title">{merchant.name}</h2><div className="row"><span>Category</span><b>{merchant.category}</b></div><div className="row"><span>Location</span><b>{merchant.location}</b></div><div className="row"><span>Account status</span><span className="tag">{merchant.isActive ? 'Active' : 'Disabled'}</span></div></section> }

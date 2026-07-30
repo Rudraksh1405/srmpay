@@ -1,0 +1,3 @@
+import { useEffect, useState } from 'react'
+import { mockApi } from '../../mockData'
+export default function MerchantTokens() { const [tokens, setTokens] = useState([]); useEffect(() => { mockApi.getTokens().then(setTokens) }, []); const flow = ['Waiting', 'Preparing', 'Ready for Pickup', 'Served']; return <section className="glass-card content-card"><p className="eyebrow">FIFO queue</p><h2 className="card-title">Token queue</h2>{tokens.map((token) => <div className="row" key={token.tokenNumber}><b>Token #{token.tokenNumber}</b><select value={token.status} onChange={() => {}}>{flow.map((status) => <option key={status}>{status}</option>)}</select></div>)}</section> }
