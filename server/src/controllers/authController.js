@@ -9,8 +9,9 @@ export const registerStudent = async (request, response) => {
   const { name, email, password } = request.body;
   if (!/@srmist\.edu\.in$/.test(email || '')) return response.status(400).json({ message: 'Use your SRMIST email address.' });
   try {
-    const student = await Student.create({ name, email, password });
-    response.status(201).json({ token: signToken({ role: 'student', email: student.email }), student: { name: student.name, email: student.email } });
+    const registrationNumber = email.split('@')[0].toUpperCase();
+    const student = await Student.create({ name, email, password, registrationNumber });
+    response.status(201).json({ token: signToken({ role: 'student', email: student.email }), student: { name: student.name, email: student.email, registrationNumber: student.registrationNumber, favorites: student.favorites } });
   } catch (error) {
     response.status(400).json({ message: error.code === 11000 ? 'An account already exists for this email.' : 'Unable to create account.' });
   }
@@ -21,7 +22,7 @@ export const loginStudent = async (request, response) => {
   if (!/@srmist\.edu\.in$/.test(email || '')) return response.status(400).json({ message: 'Use your SRMIST email address.' });
   const student = await Student.findOne({ email });
   if (!student || !(await bcrypt.compare(password || '', student.password))) return response.status(401).json({ message: 'Invalid email or password.' });
-  response.json({ token: signToken({ role: 'student', email }), student: { name: student.name, email } });
+  response.json({ token: signToken({ role: 'student', email }), student: { name: student.name, email, registrationNumber: student.registrationNumber, favorites: student.favorites } });
 };
 
 export const loginVendor = async (request, response) => {

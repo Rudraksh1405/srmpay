@@ -1,2 +1,0 @@
-import { Link } from 'react-router-dom'
-export default function Landing() { return <main className="login-page"><section className="glass-card login-card"><p className="eyebrow">SRM KTR CAMPUS</p><h1 className="page-title">SRMPAY Food</h1><p className="page-subtitle">Order campus food. Skip the queue.</p><div className="field"><Link className="primary-btn" to="/student/login">Student Login</Link><Link className="secondary-btn" to="/merchant/login">Vendor Login</Link><Link className="secondary-btn" to="/admin/login">Admin Login</Link></div></section></main> }

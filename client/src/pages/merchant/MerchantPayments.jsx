@@ -1,3 +1,0 @@
-import { useEffect, useState } from 'react'
-import { mockApi } from '../../mockData'
-export default function MerchantPayments() { const [revenue, setRevenue] = useState(); useEffect(() => { mockApi.getRevenue().then(setRevenue) }, []); return <section className="glass-card content-card"><p className="eyebrow">Payment details</p><h2 className="card-title">Settlement summary</h2><div className="metrics"><div className="metric"><p>AVAILABLE BALANCE</p><strong>₹{revenue?.today || 0}</strong></div><div className="metric"><p>NEXT SETTLEMENT</p><strong>Tomorrow</strong></div><div className="metric"><p>PAYMENT STATUS</p><strong>Active</strong></div></div></section> }

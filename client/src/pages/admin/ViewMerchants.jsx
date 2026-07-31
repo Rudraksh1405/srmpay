@@ -1,5 +1,0 @@
-import { Eye } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { mockApi } from '../../mockData'
-export default function ViewMerchants() { const [merchants, setMerchants] = useState([]); useEffect(() => { mockApi.getMerchants().then(setMerchants) }, []); const toggle = (id) => setMerchants((items) => items.map((item) => item._id === id ? { ...item, isActive: !item.isActive } : item)); return <section className="glass-card content-card"><p className="eyebrow">Merchant directory</p><h2 className="card-title">All merchants</h2>{merchants.map((merchant) => <div className="row" key={merchant._id}><span><b>{merchant.name}</b><br /><small>{merchant.category} · {merchant.orders} orders</small></span><span><Link className="secondary-btn" to={`/admin/dashboard/merchants/${merchant._id}`}><Eye size={15} /> View</Link> <button className={merchant.isActive ? 'danger-btn' : 'primary-btn'} onClick={() => toggle(merchant._id)}>{merchant.isActive ? 'Disable' : 'Enable'}</button></span></div>)}</section> }

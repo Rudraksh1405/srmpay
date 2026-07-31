@@ -1,42 +1,79 @@
-import { Route, Routes } from 'react-router-dom'
-import VendorList from './pages/VendorList'
-import VendorMenu from './pages/student/VendorMenu'
-import Cart from './pages/student/Cart'
-import OrderStatus from './pages/student/OrderStatus'
-import MerchantLogin from './pages/merchant/MerchantLogin'
-import MerchantDashboard from './pages/merchant/MerchantDashboard'
-import MerchantDashboardHome from './pages/merchant/MerchantDashboardHome'
-import MerchantMenu from './pages/merchant/MerchantMenu'
-import MerchantTokens from './pages/merchant/MerchantTokens'
-import MerchantPayments from './pages/merchant/MerchantPayments'
-import MerchantSettings from './pages/merchant/MerchantSettings'
-import AdminLogin from './pages/admin/AdminLogin'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import AdminDashboardHome from './pages/admin/AdminDashboardHome'
-import MerchantRequests from './pages/admin/MerchantRequests'
-import ViewMerchants from './pages/admin/ViewMerchants'
-import MerchantDetails from './pages/admin/MerchantDetails'
-import ProtectedRoute from './components/ProtectedRoute'
-import Landing from './pages/Landing'
-import StudentLogin from './pages/student/StudentLogin'
-import MockPayment from './pages/student/MockPayment'
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 
-export default function App() {
-  return <Routes>
-    <Route path="/" element={<Landing />} />
-    <Route path="/student/login" element={<StudentLogin />} />
-    <Route path="/vendors" element={<VendorList />} />
-    <Route path="/vendor/:id" element={<VendorMenu />} />
-    <Route path="/cart" element={<Cart />} />
-    <Route path="/payment" element={<ProtectedRoute role="student"><MockPayment /></ProtectedRoute>} />
-    <Route path="/order/:orderId" element={<OrderStatus />} />
-    <Route path="/merchant/login" element={<MerchantLogin />} />
-    <Route path="/merchant/dashboard" element={<ProtectedRoute role="merchant"><MerchantDashboard /></ProtectedRoute>}>
-      <Route index element={<MerchantDashboardHome />} /><Route path="menu" element={<MerchantMenu />} /><Route path="tokens" element={<MerchantTokens />} /><Route path="payments" element={<MerchantPayments />} /><Route path="settings" element={<MerchantSettings />} />
-    </Route>
-    <Route path="/admin/login" element={<AdminLogin />} />
-    <Route path="/admin/dashboard" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>}>
-      <Route index element={<AdminDashboardHome />} /><Route path="merchants" element={<ViewMerchants />} /><Route path="requests" element={<MerchantRequests />} /><Route path="merchants/:id" element={<MerchantDetails />} />
-    </Route>
-  </Routes>
+// Providers & Global Components
+import ErrorBoundary from './components/ErrorBoundary';
+import ToastContainer from './components/ToastContainer';
+import ProtectedRoute from './components/ProtectedRoute';
+
+// Pages
+import LandingPage from './pages/LandingPage';
+import NotFound from './pages/NotFound';
+import StudentLogin from './pages/StudentLogin';
+import VendorLogin from './pages/VendorLogin';
+import AdminLogin from './pages/AdminLogin';
+
+// Student Portal
+import StudentLayout from './pages/student/StudentLayout';
+import VendorList from './pages/student/VendorList';
+import VendorMenu from './pages/student/VendorMenu';
+import Cart from './pages/student/Cart';
+import Checkout from './pages/student/Checkout';
+import OrderStatus from './pages/student/OrderStatus';
+
+// Vendor Portal
+import VendorLayout from './pages/vendor/VendorLayout';
+import VendorOrders from './pages/vendor/VendorOrders';
+import VendorMenuTab from './pages/vendor/VendorMenuTab';
+import VendorSales from './pages/vendor/VendorSales';
+
+// Admin Portal
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminRequests from './pages/admin/AdminRequests';
+import AdminVendors from './pages/admin/AdminVendors';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/student/login" element={<StudentLogin />} />
+          <Route path="/vendor/login" element={<VendorLogin />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+
+          {/* Student Portal */}
+          <Route path="/student" element={<ProtectedRoute allowedRoles={['student']}><StudentLayout /></ProtectedRoute>}>
+            <Route index element={<VendorList />} />
+            <Route path="vendor/:vendorId" element={<VendorMenu />} />
+            <Route path="cart" element={<Cart />} />
+            <Route path="checkout" element={<Checkout />} />
+            <Route path="order/:tokenNumber" element={<OrderStatus />} />
+          </Route>
+
+          {/* Vendor Portal */}
+          <Route path="/vendor" element={<ProtectedRoute allowedRoles={['vendor']}><VendorLayout /></ProtectedRoute>}>
+            <Route index element={<VendorOrders />} />
+            <Route path="menu" element={<VendorMenuTab />} />
+            <Route path="sales" element={<VendorSales />} />
+          </Route>
+
+          {/* Admin Portal */}
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout /></ProtectedRoute>}>
+            <Route index element={<AdminVendors />} />
+            <Route path="requests" element={<AdminRequests />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
+          </Route>
+
+          {/* Fallback */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <ToastContainer />
+      </div>
+    </ErrorBoundary>
+  );
 }
+
+export default App;

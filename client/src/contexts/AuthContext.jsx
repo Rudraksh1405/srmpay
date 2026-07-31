@@ -1,29 +1,42 @@
-import { createContext, useContext, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const AuthContext = createContext()
+const AuthContext = createContext();
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const navigate = useNavigate()
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = (account) => {
-    setUser(account)
-    const { role } = account
-    if (role === 'student') navigate('/vendors')
-    if (role === 'merchant') navigate('/merchant/dashboard')
-    if (role === 'admin') navigate('/admin/dashboard')
-  }
+  useEffect(() => {
+    const storedToken = localStorage.getItem('srmpay-token');
+    const storedUser = localStorage.getItem('srmpay-user');
+    
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
+
+  const login = (userData, userToken) => {
+    setUser(userData);
+    setToken(userToken);
+    localStorage.setItem('srmpay-token', userToken);
+    localStorage.setItem('srmpay-user', JSON.stringify(userData));
+  };
+
   const logout = () => {
-    setUser(null)
-    navigate('/')
-  }
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('srmpay-token');
+    localStorage.removeItem('srmpay-user');
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
-      {children}
+    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+      {!loading && children}
     </AuthContext.Provider>
-  )
-}
+  );
+};
 
-export const useAuth = () => useContext(AuthContext)
+export const useAuth = () => useContext(AuthContext);
