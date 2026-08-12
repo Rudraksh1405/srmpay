@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CreditCard, Wallet, Loader2 } from 'lucide-react';
-import GlassCard from '../../components/GlassCard';
-import Button from '../../components/Button';
-import { useCart } from '../../contexts/CartContext';
-import { useAuth } from '../../contexts/AuthContext';
-import { useToast } from '../../contexts/ToastContext';
-import { createOrder } from '../../api';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { CreditCard, Wallet, Loader2 } from "lucide-react";
+import GlassCard from "../../components/GlassCard";
+import Button from "../../components/Button";
+import { useCart } from "../../contexts/CartContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
+import { createOrder, createPaymentOrder, verifyPayment } from "../../api";
 
 const Checkout = () => {
-  const [method, setMethod] = useState('upi');
+  const [method, setMethod] = useState("upi");
   const [isProcessing, setIsProcessing] = useState(false);
   const { cartItems, cartTotal, vendorId, clearCart } = useCart();
   const { user } = useAuth();
@@ -20,32 +20,75 @@ const Checkout = () => {
 
   const handlePayment = async () => {
     setIsProcessing(true);
-    
-    // Simulate payment gateway delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     try {
       const orderData = {
         studentEmail: user.email,
         vendorId,
-        items: cartItems.map(i => ({ menuItemId: i._id, name: i.name, price: i.price, qty: i.qty })),
-        totalAmount: total
+        items: cartItems.map((i) => ({
+          menuItemId: i._id,
+          name: i.name,
+          price: i.price,
+          qty: i.qty,
+        })),
+        totalAmount: total,
       };
-      
-      const order = await createOrder(orderData);
-      
-      addToast('Payment Successful ✅', 'success');
-      clearCart();
-      navigate(`/student/order/${order.tokenNumber}`);
-      
+
+      // Create Razorpay order
+      const payment = await createPaymentOrder(total);
+
+      const options = {
+        key: payment.key,
+        amount: payment.order.amount,
+        currency: payment.order.currency,
+        name: "SRMPAY",
+        description: "Campus Food Order",
+        order_id: payment.order.id,
+
+        handler: async function (response) {
+          try {
+            await verifyPayment(response);
+
+            const order = await createOrder(orderData);
+
+            addToast("Payment Successful ✅", "success");
+
+            clearCart();
+
+            navigate(`/student/order/${order.tokenNumber}`);
+          } catch (err) {
+            console.error(err);
+            addToast("Payment verification failed", "error");
+          }
+        },
+
+        prefill: {
+          email: user.email,
+          name: user.name || "",
+        },
+
+        theme: {
+          color: "#F97316",
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+
+      razorpay.on("payment.failed", function () {
+        addToast("Payment Failed", "error");
+        setIsProcessing(false);
+      });
+
+      razorpay.open();
     } catch (err) {
-      addToast('Payment failed', 'error');
+      console.error(err);
+      addToast("Unable to initiate payment", "error");
       setIsProcessing(false);
     }
   };
 
   if (cartItems.length === 0) {
-    navigate('/student');
+    navigate("/student");
     return null;
   }
 
@@ -63,27 +106,41 @@ const Checkout = () => {
       </GlassCard>
 
       <GlassCard className="space-y-4">
-        <h2 className="font-bold text-lg border-b border-slate-200 dark:border-slate-700 pb-2">Select Payment Method</h2>
-        
-        <div 
-          className={`p-4 border-2 rounded-xl flex items-center gap-4 cursor-pointer transition-colors ${method === 'upi' ? 'border-srm-orange bg-orange-50 dark:bg-orange-900/10' : 'border-slate-200 dark:border-slate-700 hover:border-orange-300'}`}
-          onClick={() => setMethod('upi')}
+        <h2 className="font-bold text-lg border-b border-slate-200 dark:border-slate-700 pb-2">
+          Select Payment Method
+        </h2>
+
+        <div
+          className={`p-4 border-2 rounded-xl flex items-center gap-4 cursor-pointer transition-colors ${method === "upi" ? "border-srm-orange bg-orange-50 dark:bg-orange-900/10" : "border-slate-200 dark:border-slate-700 hover:border-orange-300"}`}
+          onClick={() => setMethod("upi")}
         >
-          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'upi' ? 'border-srm-orange' : 'border-slate-300'}`}>
-            {method === 'upi' && <div className="w-2.5 h-2.5 bg-srm-orange rounded-full" />}
+          <div
+            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === "upi" ? "border-srm-orange" : "border-slate-300"}`}
+          >
+            {method === "upi" && (
+              <div className="w-2.5 h-2.5 bg-srm-orange rounded-full" />
+            )}
           </div>
-          <Wallet className={method === 'upi' ? 'text-srm-orange' : 'text-slate-500'} />
+          <Wallet
+            className={method === "upi" ? "text-srm-orange" : "text-slate-500"}
+          />
           <span className="font-medium">UPI (GPay, PhonePe, Paytm)</span>
         </div>
 
-        <div 
-          className={`p-4 border-2 rounded-xl flex items-center gap-4 cursor-pointer transition-colors ${method === 'card' ? 'border-srm-orange bg-orange-50 dark:bg-orange-900/10' : 'border-slate-200 dark:border-slate-700 hover:border-orange-300'}`}
-          onClick={() => setMethod('card')}
+        <div
+          className={`p-4 border-2 rounded-xl flex items-center gap-4 cursor-pointer transition-colors ${method === "card" ? "border-srm-orange bg-orange-50 dark:bg-orange-900/10" : "border-slate-200 dark:border-slate-700 hover:border-orange-300"}`}
+          onClick={() => setMethod("card")}
         >
-          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === 'card' ? 'border-srm-orange' : 'border-slate-300'}`}>
-            {method === 'card' && <div className="w-2.5 h-2.5 bg-srm-orange rounded-full" />}
+          <div
+            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${method === "card" ? "border-srm-orange" : "border-slate-300"}`}
+          >
+            {method === "card" && (
+              <div className="w-2.5 h-2.5 bg-srm-orange rounded-full" />
+            )}
           </div>
-          <CreditCard className={method === 'card' ? 'text-srm-orange' : 'text-slate-500'} />
+          <CreditCard
+            className={method === "card" ? "text-srm-orange" : "text-slate-500"}
+          />
           <span className="font-medium">Credit / Debit Card</span>
         </div>
       </GlassCard>
@@ -93,8 +150,8 @@ const Checkout = () => {
         <span className="text-2xl font-bold text-srm-orange">₹{total}</span>
       </GlassCard>
 
-      <Button 
-        variant="primary" 
+      <Button
+        variant="primary"
         className="w-full py-4 text-lg"
         onClick={handlePayment}
         disabled={isProcessing}

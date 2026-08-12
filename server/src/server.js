@@ -9,6 +9,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import studentRoutes from './routes/studentRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import paymentRoutes from "./routes/paymentRoutes.js";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/student', studentRoutes);
 app.use('/api/v1/search', searchRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
+app.use("/api/v1/payment", paymentRoutes);
 
 app.listen(port, () => {
   console.log(`SRMPAY server listening on http://localhost:${port}`);
